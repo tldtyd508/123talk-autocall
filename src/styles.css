@@ -1,0 +1,421 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #ffffff;
+  color: #111111;
+  font-family: Arial, "Noto Sans KR", sans-serif;
+  font-size: 14px;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  background: #5b5cf0;
+  color: #fff;
+  cursor: pointer;
+  min-height: 36px;
+  padding: 0 14px;
+  font-weight: 700;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid #d6d6d6;
+  border-radius: 8px;
+  background: #fff;
+  color: #111111;
+  min-height: 46px;
+  padding: 0 12px;
+}
+
+textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 980px;
+}
+
+th,
+td {
+  border: 1px solid #d9d9d9;
+  padding: 11px 12px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+th {
+  background: #f4f6f8;
+  color: #8c8c8c;
+  font-weight: 800;
+}
+
+td {
+  background: #fff;
+}
+
+tbody tr {
+  cursor: pointer;
+}
+
+tbody tr.selected td {
+  background: #d9ecfb;
+}
+
+.app {
+  width: min(1588px, calc(100% - 16px));
+  margin: 0 auto;
+  padding: 8px 0 48px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 38px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid #111111;
+  background: #ffffff;
+  color: #4b5563;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 20px 0 8px;
+  background: #ffffff;
+  border: 0;
+  overflow-x: auto;
+}
+
+.tabs button {
+  min-width: 124px;
+  background: #ffffff;
+  border: 1px solid #d6d6d6;
+  color: #555555;
+}
+
+.tabs button.active {
+  background: #5b5cf0;
+  border-color: #5b5cf0;
+  color: #fff;
+}
+
+.noticeBar {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  margin: 8px 0 20px;
+  border: 1px solid #d6d6d6;
+  border-radius: 8px;
+  background: #f8f8ff;
+  color: #5b5cf0;
+  padding: 0 14px;
+  font-weight: 800;
+}
+
+.panel {
+  background: #fff;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 0;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.sectionTitle h2 {
+  margin: 0;
+  color: #4b5563;
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.sectionTitle p {
+  margin: 0;
+  color: #ff3d3d;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+}
+
+.formGrid.one,
+.formStack {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 13px;
+}
+
+.field {
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+}
+
+.field > span {
+  padding-top: 10px;
+  color: #222222;
+  font-weight: 800;
+}
+
+.field b {
+  color: #e54848;
+  margin-left: 2px;
+}
+
+.previewCard {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  border: 1px solid #d6d6d6;
+  border-radius: 8px;
+  background: #ffffff;
+  min-height: 134px;
+  padding: 12px;
+}
+
+.previewCard p {
+  margin: 0;
+  color: #555555;
+}
+
+.previewCard button {
+  justify-self: start;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid #d9d9d9;
+  border-radius: 0;
+}
+
+.tableWrap table {
+  border: 0;
+}
+
+.tableWrap th:first-child,
+.tableWrap td:first-child {
+  border-left: 0;
+}
+
+.tableWrap th:last-child,
+.tableWrap td:last-child {
+  border-right: 0;
+}
+
+.mt {
+  margin-top: 16px;
+}
+
+.actions,
+.toolbar,
+.statusActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.primary {
+  background: #21ba91;
+}
+
+.danger {
+  background: #df4548;
+}
+
+.smallBtn {
+  min-height: 30px;
+  padding: 0 10px;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(360px, 0.65fr);
+  gap: 24px;
+}
+
+.split.wideRight {
+  grid-template-columns: minmax(0, 1.15fr) minmax(420px, 0.85fr);
+}
+
+.searchBar {
+  display: grid;
+  grid-template-columns: 210px 160px minmax(180px, 1fr) 88px;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.editor {
+  align-self: start;
+}
+
+.inlineFields {
+  display: grid;
+  grid-template-columns: 1fr 108px;
+  gap: 8px;
+}
+
+.uploadBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px dashed #d6d6d6;
+  border-radius: 8px;
+  background: #fafafa;
+  padding: 14px;
+}
+
+.uploadBox div {
+  display: grid;
+  gap: 4px;
+}
+
+.uploadBox span {
+  color: #667085;
+  font-size: 13px;
+}
+
+.fileButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  min-width: 72px;
+  border-radius: 6px;
+  background: #21ba91;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 800;
+  overflow: hidden;
+}
+
+.fileButton input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.statusActions button:nth-child(1) {
+  background: #5b5cf0;
+}
+
+.statusActions button:nth-child(2) {
+  background: #7d93aa;
+}
+
+.statusActions button:nth-child(3) {
+  background: #21ba91;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  min-height: 24px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.badge.진행 {
+  background: #5b5cf0;
+}
+
+.badge.보류 {
+  background: #7d93aa;
+}
+
+.badge.완료 {
+  background: #21ba91;
+}
+
+.results {
+  min-width: 1520px;
+}
+
+@media (max-width: 980px) {
+  .app {
+    width: calc(100% - 20px);
+    padding-top: 10px;
+  }
+
+  .topbar,
+  .sectionTitle,
+  .uploadBox {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .tabs,
+  .actions,
+  .toolbar,
+  .statusActions {
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+
+  .split,
+  .split.wideRight,
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .searchBar {
+    grid-template-columns: 1fr;
+  }
+
+  .field {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .field > span {
+    padding-top: 0;
+  }
+}

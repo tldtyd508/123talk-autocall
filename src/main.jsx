@@ -41,7 +41,7 @@ const initialCampaigns = [
     sendRangeStart: "09:00",
     sendRangeEnd: "18:00",
     targetFile: "",
-    targetCount: 0,
+    targetCount: 36,
     createdAt: "2026-07-03 10:30",
   },
   {
@@ -60,6 +60,45 @@ const initialCampaigns = [
     targetCount: 142,
     createdAt: "2026-07-02 16:47",
   },
+];
+
+const monitorNames = [
+  "김민준",
+  "이서연",
+  "박도윤",
+  "최지우",
+  "정하준",
+  "강서아",
+  "조유찬",
+  "윤하린",
+  "임시우",
+  "한지민",
+  "오지호",
+  "문채원",
+  "송민재",
+  "장서준",
+  "백수아",
+  "신예준",
+  "권나은",
+  "유준호",
+  "홍다은",
+  "남지훈",
+  "서하율",
+  "노가온",
+  "배유나",
+  "차현우",
+  "주아린",
+  "민태오",
+  "고은채",
+  "양지안",
+  "성우진",
+  "하소율",
+  "전이준",
+  "심아윤",
+  "원재하",
+  "길유정",
+  "표도현",
+  "마예린",
 ];
 
 const emptyCampaign = {
@@ -171,6 +210,7 @@ function App() {
     ["mentions", "멘트 설정"],
     ["campaigns", "캠페인 등록"],
     ["targets", "대상자 등록"],
+    ["monitoring", "실시간 모니터링"],
     ["results", "결과 조회"],
   ];
 
@@ -225,6 +265,7 @@ function App() {
           notify={notify}
         />
       )}
+      {activeTab === "monitoring" && <MonitoringView campaigns={campaigns} draft={draft} selectCampaign={selectCampaign} notify={notify} />}
       {activeTab === "results" && (
         <ResultsView
           campaigns={filteredCampaigns}
@@ -236,6 +277,82 @@ function App() {
         />
       )}
     </main>
+  );
+}
+
+function MonitoringView({ campaigns, draft, selectCampaign, notify }) {
+  const activeCampaign = draft.id ? draft : campaigns[0];
+  const targetCount = Math.max(activeCampaign?.targetCount || 0, 1);
+  const monitorItems = Array.from({ length: targetCount }, (_, index) => {
+    const mod = index % 12;
+    const status = mod < 5 ? "발송중" : mod < 8 ? "성공" : mod < 10 ? "대기" : mod === 10 ? "부재" : "실패";
+    return {
+      id: index + 1,
+      name: monitorNames[index % monitorNames.length],
+      phone: `010-${String(3200 + index).padStart(4, "0")}-${String(7400 + index * 7).slice(0, 4)}`,
+      status,
+      attempt: (index % 3) + 1,
+    };
+  });
+  const summary = monitorItems.reduce(
+    (acc, item) => {
+      acc[item.status] = (acc[item.status] || 0) + 1;
+      return acc;
+    },
+    { 발송중: 0, 성공: 0, 대기: 0, 부재: 0, 실패: 0 }
+  );
+
+  return (
+    <section className="panel">
+      <div className="sectionTitle">
+        <h2>실시간 모니터링</h2>
+        <p>대상자 수만큼 칸을 보여주고 발송 상태를 실시간처럼 확인합니다.</p>
+      </div>
+      <div className="monitorHeader">
+        <div className="monitorControls">
+          <CompanySelect value={activeCampaign.companyId} onChange={() => {}} />
+          <select
+            value={activeCampaign.id}
+            onChange={(event) => {
+              const selected = campaigns.find((campaign) => campaign.id === event.target.value);
+              if (selected) {
+                selectCampaign(selected);
+                notify(`${selected.name} 모니터링 화면으로 전환했습니다.`);
+              }
+            }}
+          >
+            {campaigns.map((campaign) => (
+              <option key={campaign.id} value={campaign.id}>
+                {campaign.name}
+              </option>
+            ))}
+          </select>
+          <button onClick={() => notify("실시간 모니터링 상태를 새로고침했습니다.")}>새로고침</button>
+        </div>
+        <div className="monitorSummary">
+          <span>대상 {targetCount}</span>
+          <span>발송중 {summary.발송중}</span>
+          <span>성공 {summary.성공}</span>
+          <span>대기 {summary.대기}</span>
+          <span>부재 {summary.부재}</span>
+          <span>실패 {summary.실패}</span>
+        </div>
+      </div>
+      <div className="monitorGrid" style={{ "--target-count": targetCount }}>
+        {monitorItems.map((item) => (
+          <button
+            key={item.id}
+            className={`monitorCell ${item.status}`}
+            onClick={() => notify(`${item.name} / ${item.phone} / ${item.status}`)}
+            title={`${item.name} ${item.phone} ${item.status}`}
+          >
+            <strong>{item.name}</strong>
+            <span>{item.status}</span>
+            <small>{item.attempt}차</small>
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 

@@ -140,6 +140,19 @@ tbody tr.selected td {
   font-weight: 800;
 }
 
+.apiBaseBar {
+  display: grid;
+  grid-template-columns: 110px minmax(220px, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 20px;
+}
+
+.apiBaseBar span {
+  color: #555555;
+  font-weight: 800;
+}
+
 .panel {
   background: #fff;
   border: 0;
@@ -511,6 +524,10 @@ tbody tr.selected td {
   }
 
   .searchBar {
+    grid-template-columns: 1fr;
+  }
+
+  .apiBaseBar {
     grid-template-columns: 1fr;
   }
 

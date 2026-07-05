@@ -1,5 +1,14 @@
 import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+import {
+  fetchMentSettings,
+  getApiBaseUrl,
+  queryCampaigns,
+  queryMonitoring,
+  saveCampaign as saveCampaignApi,
+  saveCampaignTargets,
+  setApiBaseUrl,
+} from "./api/acsApi";
 import "./styles.css";
 
 const companies = [
@@ -140,9 +149,86 @@ function App() {
   const [query, setQuery] = useState({ companyId: "", status: "", name: "" });
   const [selectedRows, setSelectedRows] = useState([]);
   const [notice, setNotice] = useState("오토콜 데모 화면이 준비되었습니다.");
+  const [apiBase, setApiBase] = useState(getApiBaseUrl());
 
   function notify(message) {
     setNotice(message);
+  }
+
+  function updateApiBase(value) {
+    setApiBase(value);
+    setApiBaseUrl(value);
+    notify(value ? `API Base URL을 ${value}로 설정했습니다.` : "API Base URL을 상대 경로로 초기화했습니다.");
+  }
+
+  function campaignPayload(campaign, mode = campaign?.id ? "Update" : "Insert") {
+    return {
+      userid: campaign.companyId,
+      hid_mode: mode,
+      hid_mngid: campaign.companyId,
+      hid_id: campaign.id,
+      mng_id: campaign.companyId,
+      ars_gubun: "0",
+      camp03: campaign.name,
+      camp04dt: campaign.startDate,
+      camp04tt: campaign.startTime,
+      camp05dt: campaign.endDate,
+      camp05tt: campaign.endTime,
+      camp07: "22",
+      campc04: campaign.sendRangeStart,
+      campc05: campaign.sendRangeEnd,
+      camp06: campaign.retry,
+      agtcnt: "0",
+      targetcnt: campaign.targetCount,
+    };
+  }
+
+  async function runCampaignApiTest(campaign) {
+    const payload = campaignPayload(campaign);
+    await runApiAlert("캠페인 등록/수정", payload, () => saveCampaignApi(payload), notify);
+  }
+
+  async function runTargetApiTest(campaign) {
+    const payload = {
+      mngid: campaign.companyId,
+      campcode_tmp: campaign.id,
+      rsvch1: campaign.sendRangeStart,
+      rsvch2: campaign.sendRangeEnd,
+      camp04dt: campaign.startDate,
+      camp04tt: campaign.startTime,
+      camp05dt: campaign.endDate,
+      camp05tt: campaign.endTime,
+      rsvcnt: campaign.retry,
+      chkDup: "1",
+      chkSpam: "1",
+      type_excel: "",
+      fileurl: campaign.targetFile || "https://example.com/targets.txt",
+    };
+    await runApiAlert("대상자 등록", payload, () => saveCampaignTargets(payload), notify);
+  }
+
+  async function runQueryApiTest(nextQuery) {
+    const stateMap = { 진행: "2", 보류: "3", 완료: "4" };
+    const payload = {
+      mngid: nextQuery.companyId || "mng",
+      dt1: "2026-07-01",
+      dt2: "2026-07-05",
+      f_name: nextQuery.name,
+      state: stateMap[nextQuery.status] || "0",
+      page: "1",
+      sort: "timestart",
+      dir: "desc",
+      start: "0",
+      limit: "10",
+    };
+    await runApiAlert("캠페인 조회", payload, () => queryCampaigns(payload), notify);
+  }
+
+  async function runMonitoringApiTest(campaign) {
+    const payload = {
+      ccode: campaign.companyId,
+    };
+    await runApiAlert("실시간 모니터링", payload, () => queryMonitoring(payload), notify);
   }
 
   const filteredCampaigns = useMemo(() => {
@@ -234,6 +320,15 @@ function App() {
         {notice}
       </div>
 
+      <div className="apiBaseBar">
+        <span>API Base URL</span>
+        <input
+          value={apiBase}
+          placeholder="예: https://123talk.co.kr 또는 비워두면 상대 경로"
+          onChange={(event) => updateApiBase(event.target.value)}
+        />
+      </div>
+
       {activeTab === "mentions" && <MentionsView mentions={mentions} setMentions={setMentions} notify={notify} />}
       {activeTab === "campaigns" && (
         <CampaignsView
@@ -247,6 +342,7 @@ function App() {
           newCampaign={newCampaign}
           saveCampaign={saveCampaign}
           deleteCampaign={deleteCampaign}
+          runCampaignApiTest={runCampaignApiTest}
           notify={notify}
         />
       )}
@@ -261,11 +357,20 @@ function App() {
           saveCampaign={saveCampaign}
           deleteCampaign={deleteCampaign}
           attachTargets={attachTargets}
+          runTargetApiTest={runTargetApiTest}
           setCampaignStatus={setCampaignStatus}
           notify={notify}
         />
       )}
-      {activeTab === "monitoring" && <MonitoringView campaigns={campaigns} draft={draft} selectCampaign={selectCampaign} notify={notify} />}
+      {activeTab === "monitoring" && (
+        <MonitoringView
+          campaigns={campaigns}
+          draft={draft}
+          selectCampaign={selectCampaign}
+          runMonitoringApiTest={runMonitoringApiTest}
+          notify={notify}
+        />
+      )}
       {activeTab === "results" && (
         <ResultsView
           campaigns={filteredCampaigns}
@@ -273,6 +378,7 @@ function App() {
           setQuery={setQuery}
           selectedRows={selectedRows}
           setSelectedRows={setSelectedRows}
+          runQueryApiTest={runQueryApiTest}
           notify={notify}
         />
       )}
@@ -280,7 +386,7 @@ function App() {
   );
 }
 
-function MonitoringView({ campaigns, draft, selectCampaign, notify }) {
+function MonitoringView({ campaigns, draft, selectCampaign, runMonitoringApiTest, notify }) {
   const activeCampaign = draft.id ? draft : campaigns[0];
   const targetCount = Math.max(activeCampaign?.targetCount || 0, 1);
   const monitorItems = Array.from({ length: targetCount }, (_, index) => {
@@ -328,6 +434,7 @@ function MonitoringView({ campaigns, draft, selectCampaign, notify }) {
             ))}
           </select>
           <button onClick={() => notify("실시간 모니터링 상태를 새로고침했습니다.")}>새로고침</button>
+          <button onClick={() => runMonitoringApiTest(activeCampaign)}>API 테스트</button>
         </div>
         <div className="monitorSummary">
           <span>대상 {targetCount}</span>
@@ -391,6 +498,13 @@ function MentionsView({ mentions, setMentions, notify }) {
       ...prev,
       digits: prev.digits.map((digit, i) => (i === index ? { ...digit, [key]: value } : digit)),
     }));
+  }
+
+  async function testMentApi() {
+    const payload = {
+      userid: mentions.companyId,
+    };
+    await runApiAlert("멘트설정", payload, () => fetchMentSettings(payload), notify);
   }
 
   return (
@@ -485,9 +599,40 @@ function MentionsView({ mentions, setMentions, notify }) {
         <button className="primary" onClick={() => notify(`${companyName(mentions.companyId)} 멘트 설정이 저장되었습니다.`)}>
           저장
         </button>
+        <button onClick={testMentApi}>API 테스트</button>
       </div>
     </section>
   );
+}
+
+async function runApiAlert(label, payload, request, notify) {
+  notify(`${label} API 요청을 전송합니다.`);
+  try {
+    const result = await request();
+    const message = [
+      `[${label}] API 테스트`,
+      "",
+      "전송값",
+      JSON.stringify(payload, null, 2),
+      "",
+      "응답",
+      JSON.stringify(result, null, 2),
+    ].join("\n");
+    alert(message);
+    notify(`${label} API 응답을 확인했습니다. 상태: ${result.status}`);
+  } catch (error) {
+    const message = [
+      `[${label}] API 테스트 실패`,
+      "",
+      "전송값",
+      JSON.stringify(payload, null, 2),
+      "",
+      "오류",
+      error?.message || String(error),
+    ].join("\n");
+    alert(message);
+    notify(`${label} API 요청이 실패했습니다.`);
+  }
 }
 
 function SearchBar({ query, setQuery, notify }) {
@@ -511,7 +656,20 @@ function SearchBar({ query, setQuery, notify }) {
 }
 
 function CampaignsView(props) {
-  const { campaigns, draft, setDraft, query, setQuery, selectedId, selectCampaign, newCampaign, saveCampaign, deleteCampaign, notify } = props;
+  const {
+    campaigns,
+    draft,
+    setDraft,
+    query,
+    setQuery,
+    selectedId,
+    selectCampaign,
+    newCampaign,
+    saveCampaign,
+    deleteCampaign,
+    runCampaignApiTest,
+    notify,
+  } = props;
 
   return (
     <section className="split">
@@ -530,6 +688,7 @@ function CampaignsView(props) {
         saveCampaign={saveCampaign}
         deleteCampaign={deleteCampaign}
         compact
+        runCampaignApiTest={runCampaignApiTest}
         notify={notify}
       />
     </section>
@@ -547,6 +706,7 @@ function TargetsView(props) {
     saveCampaign,
     deleteCampaign,
     attachTargets,
+    runTargetApiTest,
     setCampaignStatus,
     notify,
   } = props;
@@ -588,7 +748,7 @@ function TargetsView(props) {
                 accept=".xls,.xlsx,.csv"
                 onChange={(event) => {
                   const file = event.target.files?.[0];
-                  attachTargets(file);
+          attachTargets(file);
                   if (file) notify(`${file.name} 대상자 엑셀을 등록했습니다.`);
                 }}
               />
@@ -603,6 +763,12 @@ function TargetsView(props) {
               }}
             >
               진행
+            </button>
+            <button
+              onClick={() => runTargetApiTest(draft)}
+              disabled={!draft.id}
+            >
+              API 테스트
             </button>
             <button
               disabled={isDone}
@@ -667,7 +833,7 @@ function CampaignTable({ campaigns, selectedId, onSelect }) {
   );
 }
 
-function CampaignEditor({ draft, setDraft, newCampaign, saveCampaign, deleteCampaign, compact = false, notify }) {
+function CampaignEditor({ draft, setDraft, newCampaign, saveCampaign, deleteCampaign, compact = false, runCampaignApiTest, notify }) {
   function update(key, value) {
     setDraft((prev) => ({ ...prev, [key]: value }));
   }
@@ -725,6 +891,11 @@ function CampaignEditor({ draft, setDraft, newCampaign, saveCampaign, deleteCamp
         >
           저장
         </button>
+        {runCampaignApiTest && (
+          <button onClick={() => runCampaignApiTest(draft)}>
+            API 테스트
+          </button>
+        )}
         <button
           className="danger"
           onClick={() => {
@@ -740,7 +911,7 @@ function CampaignEditor({ draft, setDraft, newCampaign, saveCampaign, deleteCamp
   );
 }
 
-function ResultsView({ campaigns, query, setQuery, selectedRows, setSelectedRows, notify }) {
+function ResultsView({ campaigns, query, setQuery, selectedRows, setSelectedRows, runQueryApiTest, notify }) {
   const rows = campaigns.map((campaign, index) => {
     const seed = index + campaign.name.length;
     return {
@@ -769,6 +940,7 @@ function ResultsView({ campaigns, query, setQuery, selectedRows, setSelectedRows
       <SearchBar query={query} setQuery={setQuery} notify={notify} />
       <div className="toolbar">
         <button onClick={() => notify("결과 조회 엑셀 다운로드 요청을 확인했습니다.")}>엑셀</button>
+        <button onClick={() => runQueryApiTest(query)}>API 테스트</button>
         <button
           onClick={() => {
             setSelectedRows(rows.map((row) => row.id));

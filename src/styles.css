@@ -159,6 +159,7 @@ tbody tr.selected td {
   border-radius: 0;
   padding: 0;
   box-shadow: none;
+  min-width: 0;
 }
 
 .sectionTitle {
@@ -237,7 +238,9 @@ tbody tr.selected td {
 }
 
 .tableWrap {
+  max-width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid #d9d9d9;
   border-radius: 0;
 }
@@ -264,6 +267,7 @@ tbody tr.selected td {
 .toolbar,
 .statusActions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
   margin-top: 16px;
@@ -286,10 +290,18 @@ tbody tr.selected td {
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(360px, 0.65fr);
   gap: 24px;
+  align-items: start;
 }
 
-.split.wideRight {
-  grid-template-columns: minmax(0, 1.15fr) minmax(420px, 0.85fr);
+.sideStack {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.targetPanel {
+  border-top: 1px solid #d9d9d9;
+  padding-top: 18px;
 }
 
 .searchBar {
@@ -518,9 +530,20 @@ tbody tr.selected td {
   }
 
   .split,
-  .split.wideRight,
   .formGrid {
     grid-template-columns: 1fr;
+  }
+
+  table {
+    min-width: 760px;
+  }
+
+  .results {
+    min-width: 1280px;
+  }
+
+  .app {
+    overflow-x: hidden;
   }
 
   .searchBar {
@@ -542,5 +565,15 @@ tbody tr.selected td {
 
   .field > span {
     padding-top: 0;
+  }
+
+  .inlineFields {
+    grid-template-columns: 1fr;
+  }
+
+  .actions button,
+  .statusActions button,
+  .toolbar button {
+    flex: 1 1 120px;
   }
 }

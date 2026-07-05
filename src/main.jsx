@@ -295,7 +295,6 @@ function App() {
   const tabs = [
     ["mentions", "멘트 설정"],
     ["campaigns", "캠페인 등록"],
-    ["targets", "대상자 등록"],
     ["monitoring", "실시간 모니터링"],
     ["results", "결과 조회"],
   ];
@@ -342,21 +341,8 @@ function App() {
           newCampaign={newCampaign}
           saveCampaign={saveCampaign}
           deleteCampaign={deleteCampaign}
-          runCampaignApiTest={runCampaignApiTest}
-          notify={notify}
-        />
-      )}
-      {activeTab === "targets" && (
-        <TargetsView
-          campaigns={filteredCampaigns}
-          draft={draft}
-          setDraft={setDraft}
-          selectedId={selectedId}
-          selectCampaign={selectCampaign}
-          newCampaign={newCampaign}
-          saveCampaign={saveCampaign}
-          deleteCampaign={deleteCampaign}
           attachTargets={attachTargets}
+          runCampaignApiTest={runCampaignApiTest}
           runTargetApiTest={runTargetApiTest}
           setCampaignStatus={setCampaignStatus}
           notify={notify}
@@ -668,8 +654,13 @@ function CampaignsView(props) {
     saveCampaign,
     deleteCampaign,
     runCampaignApiTest,
+    runTargetApiTest,
+    attachTargets,
+    setCampaignStatus,
     notify,
   } = props;
+  const isDone = draft.status === "완료";
+  const canStart = Boolean(draft.targetFile) && !isDone;
 
   return (
     <section className="split">
@@ -681,57 +672,18 @@ function CampaignsView(props) {
         <SearchBar query={query} setQuery={setQuery} notify={notify} />
         <CampaignTable campaigns={campaigns} selectedId={selectedId} onSelect={selectCampaign} />
       </div>
-      <CampaignEditor
-        draft={draft}
-        setDraft={setDraft}
-        newCampaign={newCampaign}
-        saveCampaign={saveCampaign}
-        deleteCampaign={deleteCampaign}
-        compact
-        runCampaignApiTest={runCampaignApiTest}
-        notify={notify}
-      />
-    </section>
-  );
-}
-
-function TargetsView(props) {
-  const {
-    campaigns,
-    draft,
-    setDraft,
-    selectedId,
-    selectCampaign,
-    newCampaign,
-    saveCampaign,
-    deleteCampaign,
-    attachTargets,
-    runTargetApiTest,
-    setCampaignStatus,
-    notify,
-  } = props;
-  const isDone = draft.status === "완료";
-  const canStart = Boolean(draft.targetFile) && !isDone;
-
-  return (
-    <section className="split wideRight">
-      <div className="panel">
-        <div className="sectionTitle">
-          <h2>캠페인 대상자 등록</h2>
-          <p>캠페인을 선택하면 우측에서 대상자 엑셀과 진행 상태를 관리합니다.</p>
-        </div>
-        <CampaignTable campaigns={campaigns} selectedId={selectedId} onSelect={selectCampaign} />
-      </div>
-      <div>
+      <div className="sideStack">
         <CampaignEditor
           draft={draft}
           setDraft={setDraft}
           newCampaign={newCampaign}
           saveCampaign={saveCampaign}
           deleteCampaign={deleteCampaign}
+          compact
+          runCampaignApiTest={runCampaignApiTest}
           notify={notify}
         />
-        <div className="panel mt">
+        <div className="panel targetPanel">
           <div className="sectionTitle">
             <h2>대상자 설정</h2>
             <p>엑셀 파일을 등록하면 진행 버튼이 활성화됩니다.</p>
@@ -748,7 +700,7 @@ function TargetsView(props) {
                 accept=".xls,.xlsx,.csv"
                 onChange={(event) => {
                   const file = event.target.files?.[0];
-          attachTargets(file);
+                  attachTargets(file);
                   if (file) notify(`${file.name} 대상자 엑셀을 등록했습니다.`);
                 }}
               />
@@ -764,10 +716,7 @@ function TargetsView(props) {
             >
               진행
             </button>
-            <button
-              onClick={() => runTargetApiTest(draft)}
-              disabled={!draft.id}
-            >
+            <button onClick={() => runTargetApiTest(draft)} disabled={!draft.id}>
               API 테스트
             </button>
             <button
